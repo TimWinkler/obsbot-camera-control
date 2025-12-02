@@ -311,32 +311,87 @@ check_dependencies() {
         all_ok=false
     fi
 
-    # Check for Qt6 Core
-    if pkg-config --exists Qt6Core 2>/dev/null; then
-        local qt6_version=$(pkg-config --modversion Qt6Core)
-        print_msg "$GREEN" "  ✓ Qt6 Core ($qt6_version)"
+    # Helper: check via CMake find-package
+    have_cmake_package() {
+        cmake --find-package -DNAME="$1" -DQUIET=1 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST >/dev/null 2>&1
+    }
+
+    # Helper: check presence of CMake config directory for a Qt6 module
+    have_qt_cmake_dir() {
+        local module="$1"
+        # Common cmake roots
+        for root in \
+            /usr/lib/cmake \
+            /usr/lib64/cmake \
+            /usr/lib/*/cmake \
+            /usr/local/lib/cmake \
+            /usr/local/lib64/cmake \
+            /usr/local/lib/*/cmake; do
+            # Use globbing safely
+            for d in $root; do
+                if [ -d "$d/$module" ]; then
+                    return 0
+                fi
+            done
+        done
+        return 1
+    }
+
+    # Helper: generic component check with pkg-config OR CMake fallback
+    check_qt_component() {
+        local label="$1"      # Display label
+        local pc_name="$2"    # pkg-config name
+        local cmake_name="$3" # CMake package name
+
+        if pkg-config --exists "$pc_name" 2>/dev/null; then
+            # Try to get version if available
+            local ver=$(pkg-config --modversion "$pc_name" 2>/dev/null || true)
+            if [ -n "$ver" ]; then
+                print_msg "$GREEN" "  ✓ $label ($ver)"
+            else
+                print_msg "$GREEN" "  ✓ $label"
+            fi
+            return 0
+        fi
+
+        if have_cmake_package "$cmake_name" || have_qt_cmake_dir "$cmake_name"; then
+            print_msg "$GREEN" "  ✓ $label (detected via CMake)"
+            return 0
+        fi
+
+        return 1
+    }
+
+    # Qt6 Base (Widgets implies Core). Try Widgets first, then fall back to qtpaths6.
+    if check_qt_component "Qt6 Widgets" "Qt6Widgets" "Qt6Widgets"; then
+        :
     else
-        print_msg "$RED" "  ✗ Qt6 Core - NOT FOUND"
+        if command -v qtpaths6 >/dev/null 2>&1 || command -v qtpaths-qt6 >/dev/null 2>&1; then
+            print_msg "$YELLOW" "  ⚠ Qt6 base detected (via qtpaths), but Widgets module not found"
+        else
+            print_msg "$RED" "  ✗ Qt6 Widgets - NOT FOUND"
+        fi
         print_msg "$YELLOW" "    Install: $(get_install_cmd qt6-base-dev)"
         all_ok=false
     fi
 
-    # Check for Qt6 Widgets
-    if pkg-config --exists Qt6Widgets 2>/dev/null; then
-        print_msg "$GREEN" "  ✓ Qt6 Widgets"
-    else
-        print_msg "$RED" "  ✗ Qt6 Widgets - NOT FOUND"
-        print_msg "$YELLOW" "    Install: $(get_install_cmd qt6-base-dev)"
-        all_ok=false
-    fi
-
-    # Check for Qt6 Multimedia
-    if pkg-config --exists Qt6Multimedia 2>/dev/null; then
-        print_msg "$GREEN" "  ✓ Qt6 Multimedia"
+    # Qt6 Multimedia
+    if check_qt_component "Qt6 Multimedia" "Qt6Multimedia" "Qt6Multimedia"; then
+        :
     else
         print_msg "$RED" "  ✗ Qt6 Multimedia - NOT FOUND"
         print_msg "$YELLOW" "    Install: $(get_install_cmd qt6-multimedia-dev)"
         all_ok=false
+    fi
+
+    # Qt6 OpenGLWidgets (used by the project)
+    if check_qt_component "Qt6 OpenGLWidgets" "Qt6OpenGLWidgets" "Qt6OpenGLWidgets"; then
+        :
+    else
+        # Usually part of qt6-base on most distros
+        print_msg "$YELLOW" "  ⚠ Qt6 OpenGLWidgets - NOT FOUND"
+        print_msg "$YELLOW" "    Install: $(get_install_cmd qt6-base-dev)"
+        # Not strictly fatal; CMake will error if required
     fi
 
     # Check for optional but recommended tools
