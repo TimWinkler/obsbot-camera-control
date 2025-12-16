@@ -258,7 +258,11 @@ void TrackingControlWidget::updateFromState(const CameraController::CameraState 
     // 2. Not during user action AND
     // 3. Command completion timer has expired AND
     // 4. Camera is not settling
-    bool shouldBeChecked = (state.aiMode != Device::AiWorkModeNone);
+    // For Tiny2: aiMode determines tracking state
+    // For non-Tiny2 (original Tiny): use autoFramingEnabled flag
+    bool shouldBeChecked = m_tiny2Capabilities
+        ? (state.aiMode != Device::AiWorkModeNone)
+        : state.autoFramingEnabled;
     bool commandInFlight = m_commandTimer->isActive();
     bool isSettling = m_controller->isSettling();
 
