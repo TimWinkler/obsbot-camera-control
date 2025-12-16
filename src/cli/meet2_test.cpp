@@ -67,9 +67,17 @@ int main(int argc, char **argv)
     Devices::get().setDevChangedCallback(onDevChanged, nullptr);
     Devices::get().setEnableMdnsScan(false);  // USB only
 
-    // Wait for device detection
+    // Wait for device detection with timeout
     cout << "Waiting for OBSBOT camera..." << endl;
-    this_thread::sleep_for(chrono::seconds(3));
+    const int timeout_seconds = 10;
+    for (int i = 0; i < timeout_seconds * 10; i++) {
+        if (device_connected) {
+            // Give a moment for device list to be populated after callback
+            this_thread::sleep_for(chrono::milliseconds(200));
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
 
     auto dev_list = Devices::get().getDevList();
     if (dev_list.empty()) {
