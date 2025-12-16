@@ -174,12 +174,21 @@ void CameraSettingsWidget::onFaceFocusToggled(bool checked)
 void CameraSettingsWidget::onBrightnessAutoToggled(bool checked)
 {
     m_userInitiated = true;
-    m_controller->setBrightnessAuto(checked);
     m_brightnessSlider->setEnabled(!checked);
-    // When switching to manual, send current slider value
-    if (!checked) {
+    if (checked) {
+        // Reset to default (neutral) value - send BEFORE setting auto flag
+        auto range = m_controller->getBrightnessRange();
+        int defaultVal = range.valid ? range.defaultValue : 50;
+        m_brightnessSlider->blockSignals(true);
+        m_brightnessSlider->setValue(defaultVal);
+        m_brightnessSlider->blockSignals(false);
+        m_controller->setBrightness(defaultVal);
+    } else {
+        // When switching to manual, send current slider value
         m_controller->setBrightness(m_brightnessSlider->value());
     }
+    // Set auto flag AFTER sending the value
+    m_controller->setBrightnessAuto(checked);
     m_commandTimer->start(1000);
 }
 
@@ -193,12 +202,21 @@ void CameraSettingsWidget::onBrightnessChanged(int value)
 void CameraSettingsWidget::onContrastAutoToggled(bool checked)
 {
     m_userInitiated = true;
-    m_controller->setContrastAuto(checked);
     m_contrastSlider->setEnabled(!checked);
-    // When switching to manual, send current slider value
-    if (!checked) {
+    if (checked) {
+        // Reset to default (neutral) value - send BEFORE setting auto flag
+        auto range = m_controller->getContrastRange();
+        int defaultVal = range.valid ? range.defaultValue : 50;
+        m_contrastSlider->blockSignals(true);
+        m_contrastSlider->setValue(defaultVal);
+        m_contrastSlider->blockSignals(false);
+        m_controller->setContrast(defaultVal);
+    } else {
+        // When switching to manual, send current slider value
         m_controller->setContrast(m_contrastSlider->value());
     }
+    // Set auto flag AFTER sending the value
+    m_controller->setContrastAuto(checked);
     m_commandTimer->start(1000);
 }
 
@@ -212,12 +230,21 @@ void CameraSettingsWidget::onContrastChanged(int value)
 void CameraSettingsWidget::onSaturationAutoToggled(bool checked)
 {
     m_userInitiated = true;
-    m_controller->setSaturationAuto(checked);
     m_saturationSlider->setEnabled(!checked);
-    // When switching to manual, send current slider value
-    if (!checked) {
+    if (checked) {
+        // Reset to default (neutral) value - send BEFORE setting auto flag
+        auto range = m_controller->getSaturationRange();
+        int defaultVal = range.valid ? range.defaultValue : 50;
+        m_saturationSlider->blockSignals(true);
+        m_saturationSlider->setValue(defaultVal);
+        m_saturationSlider->blockSignals(false);
+        m_controller->setSaturation(defaultVal);
+    } else {
+        // When switching to manual, send current slider value
         m_controller->setSaturation(m_saturationSlider->value());
     }
+    // Set auto flag AFTER sending the value
+    m_controller->setSaturationAuto(checked);
     m_commandTimer->start(1000);
 }
 
@@ -288,27 +315,9 @@ void CameraSettingsWidget::updateFromState(const CameraController::CameraState &
             m_faceFocusCheckBox->blockSignals(false);
         }
 
-        // Image controls - update auto checkboxes
-        if (m_brightnessAutoCheckBox->isChecked() != state.brightnessAuto) {
-            m_brightnessAutoCheckBox->blockSignals(true);
-            m_brightnessAutoCheckBox->setChecked(state.brightnessAuto);
-            m_brightnessAutoCheckBox->blockSignals(false);
-            m_brightnessSlider->setEnabled(!state.brightnessAuto);
-        }
-
-        if (m_contrastAutoCheckBox->isChecked() != state.contrastAuto) {
-            m_contrastAutoCheckBox->blockSignals(true);
-            m_contrastAutoCheckBox->setChecked(state.contrastAuto);
-            m_contrastAutoCheckBox->blockSignals(false);
-            m_contrastSlider->setEnabled(!state.contrastAuto);
-        }
-
-        if (m_saturationAutoCheckBox->isChecked() != state.saturationAuto) {
-            m_saturationAutoCheckBox->blockSignals(true);
-            m_saturationAutoCheckBox->setChecked(state.saturationAuto);
-            m_saturationAutoCheckBox->blockSignals(false);
-            m_saturationSlider->setEnabled(!state.saturationAuto);
-        }
+        // Image controls - DON'T update auto checkboxes from camera state
+        // These are UI-only flags (camera doesn't have auto brightness/contrast/saturation)
+        // The checkboxes are only updated via user interaction or config load
     }
 
     // Always update slider values when in auto mode (to show polled values)
