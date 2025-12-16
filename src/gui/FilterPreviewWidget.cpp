@@ -5,9 +5,20 @@
 #include <QVector2D>
 #include <QVideoFrame>
 #include <QtMath>
+#include <QtGlobal>
 #include <cmath>
 
 namespace {
+
+// Qt compatibility: flipped() added in Qt 5.10, mirrored() deprecated in Qt 6
+inline QImage flipVertical(const QImage &image)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+    return image.flipped(Qt::Vertical);
+#else
+    return image.mirrored(false, true);
+#endif
+}
 
 const char *kVertexShaderSource = R"(#version 330 core
 layout(location = 0) in vec2 a_position;
@@ -269,7 +280,7 @@ void FilterPreviewWidget::paintGL()
                      GL_RGBA, GL_UNSIGNED_BYTE, output.bits());
         m_framebuffer->release();
 
-        emit processedFrameReady(output.flipped(Qt::Vertical));
+        emit processedFrameReady(flipVertical(output));
         m_emitPending = false;
     }
 
@@ -382,7 +393,7 @@ void FilterPreviewWidget::uploadTextureIfNeeded()
         m_texture->bind();
     }
 
-    QImage glImage = m_currentImage.flipped(Qt::Vertical);
+    QImage glImage = flipVertical(m_currentImage);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
                     frameSize.width(), frameSize.height(),
