@@ -355,7 +355,7 @@ void MainWindow::setupUI()
     connect(m_effectsWidget, &VideoEffectsWidget::effectsChanged,
             this, &MainWindow::onVideoEffectsChanged);
     m_tabWidget->addTab(m_effectsWidget, tr("Creative FX"));
-    controlLayout->addWidget(m_tabWidget, 1);
+    controlLayout->addWidget(m_tabWidget);
     m_effectsWidget->reset();
 
     QGroupBox *virtualCameraGroup = new QGroupBox(tr("Virtual Camera"), m_controlCard);
@@ -427,6 +427,9 @@ void MainWindow::setupUI()
     m_statusLabel->setObjectName("footerStatus");
     m_statusLabel->setWordWrap(true);
     controlLayout->addWidget(m_statusLabel);
+
+    // Add stretch to push controls to top and absorb extra vertical space
+    controlLayout->addStretch();
 
     m_splitter->addWidget(m_previewCard);
     m_splitter->addWidget(m_controlCard);
