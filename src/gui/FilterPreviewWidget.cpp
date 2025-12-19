@@ -10,10 +10,10 @@
 
 namespace {
 
-// Qt compatibility: flipped() added in Qt 5.10, mirrored() deprecated in Qt 6
+// Qt compatibility: flipped() added in Qt 6.9, mirrored() deprecated in Qt 6.9
 inline QImage flipVertical(const QImage &image)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
     return image.flipped(Qt::Vertical);
 #else
     return image.mirrored(false, true);
