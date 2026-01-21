@@ -24,7 +24,9 @@ class QFrame;
 class QWidget;
 class QLineEdit;
 class QComboBox;
+class QScrollArea;
 class VirtualCameraStreamer;
+class OutputSettingsWidget;
 
 /**
  * @brief Main application window
@@ -100,16 +102,14 @@ private:
     QTabWidget *m_tabWidget;
     QFrame *m_statusBanner;
     QHBoxLayout *m_mainLayout;
-    QCheckBox *m_virtualCameraCheckbox;
-    QLineEdit *m_virtualCameraDeviceEdit;
-    QComboBox *m_virtualCameraResolutionCombo;
-    QLabel *m_virtualCameraStatusLabel;
+    QScrollArea *m_controlScrollArea;
 
     // Control widgets
     TrackingControlWidget *m_trackingWidget;
     PTZControlWidget *m_ptzWidget;
     CameraSettingsWidget *m_settingsWidget;
     VideoEffectsWidget *m_effectsWidget;
+    OutputSettingsWidget *m_outputWidget;
     CameraPreviewWidget *m_previewWidget;
     PreviewWindow *m_previewWindow;
     VirtualCameraStreamer *m_virtualCameraStreamer;

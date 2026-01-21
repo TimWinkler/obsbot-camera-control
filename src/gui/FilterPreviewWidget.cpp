@@ -177,7 +177,7 @@ FilterPreviewWidget::FilterPreviewWidget(QWidget *parent)
     , m_vertexBuffer(QOpenGLBuffer::VertexBuffer)
     , m_geometryInitialized(false)
 {
-    setMinimumSize(320, 240);
+    setMinimumSize(200, 150);
     setUpdateBehavior(QOpenGLWidget::PartialUpdate);
 }
 

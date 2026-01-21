@@ -43,6 +43,8 @@ add_executable(obsbot-gui
     src/gui/VirtualCameraStreamer.h
     src/gui/PreviewWindow.cpp
     src/gui/PreviewWindow.h
+    src/gui/OutputSettingsWidget.cpp
+    src/gui/OutputSettingsWidget.h
     src/common/Config.cpp
     src/common/Config.h
     resources/resources.qrc
